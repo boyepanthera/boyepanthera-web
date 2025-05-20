@@ -46,7 +46,8 @@ export default function WorkExperience() {
     },
     {
       company: "Successtrend IT Firm",
-      role: "February 2017 - October 2018",
+      role: "Junior Web Developer",
+      period: "February 2017 - October 2018",
       responsibilities: [
         "Contributed as a Junior Web Developer at SuccessTrend IT Firm, collaborating with senior developers to create SmartRecharge.ng and MobileOne.ng, turned key utilities payment portals for resellers and agents. These platforms processed over N100 million in annual sales in 2019 and 2020 ",
         "Build frontend code with, html, css, JQuery, Js and Bootstrap used by the senior engineers as template engine UI components/pages.",
