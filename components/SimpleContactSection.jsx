@@ -9,6 +9,7 @@ export default function SimpleContactSection() {
 
   return (
     <footer
+      id="contact"
       className={`
       py-16 px-8
       ${
@@ -34,7 +35,7 @@ export default function SimpleContactSection() {
                 href="mailto:boyepanthera@gmail.com"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
               >
-                boyepanthera@gmail.com
+                &nbsp; boyepanthera@gmail.com
               </a>
             </p>
 
@@ -44,7 +45,7 @@ export default function SimpleContactSection() {
                 href="tel:+3169280387"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
               >
-                (316) 928-0387
+                &nbsp; (316) 928-0387
               </a>
             </p>
 

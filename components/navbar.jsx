@@ -60,18 +60,14 @@ export default function Navbar() {
         >
           Projects
         </Link>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() =>
-            openInNewTab("https://calendly.com/boyepanthera/30min")
-          }
+        <Link
+          href="/#contact"
           className={`cursor-pointer hover:opacity-80 transition ${
             theme === "dark" ? "text-white/80" : "text-gray-700"
           }`}
         >
           Contact
-        </div>
+        </Link>
       </div>
 
       {/* Right side items: Theme toggle and CTA button */}
