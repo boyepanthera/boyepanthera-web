@@ -31,10 +31,10 @@ export default function SimpleContactSection() {
             <p className="flex items-baseline">
               <span className="text-amber-400 font-medium w-12">Email:</span>
               <a
-                href="mailto:boye@example.com"
+                href="mailto:boye@megastacktech.com"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
               >
-                boye@example.com
+                boye@megastacktech.com
               </a>
             </p>
 
@@ -44,13 +44,13 @@ export default function SimpleContactSection() {
                 href="tel:+1234567890"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
               >
-                (234) 567-8901
+                (316) 928-8901
               </a>
             </p>
 
             <div className="flex space-x-4 pt-4">
               <a
-                href="https://twitter.com/yourhandle"
+                href="https://twitter.com/boyepanthera"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
@@ -60,7 +60,7 @@ export default function SimpleContactSection() {
               </a>
 
               <a
-                href="https://linkedin.com/in/yourprofile"
+                href="https://linkedin.com/in/olaboye-olanrewaju/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-amber-400 transition-colors"

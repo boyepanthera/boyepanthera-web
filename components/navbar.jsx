@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./ThemeProvider";
+import { openInNewTab } from "./util";
 
 export default function Navbar() {
   const { theme } = useTheme();
@@ -59,23 +60,29 @@ export default function Navbar() {
         >
           Projects
         </Link>
-        <Link
-          href="https://calendly.com/boyepanthera/30min"
-          className={`hover:opacity-80 transition ${
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() =>
+            openInNewTab("https://calendly.com/boyepanthera/30min")
+          }
+          className={`cursor-pointer hover:opacity-80 transition ${
             theme === "dark" ? "text-white/80" : "text-gray-700"
           }`}
         >
           Contact
-        </Link>
+        </div>
       </div>
 
       {/* Right side items: Theme toggle and CTA button */}
       <div className="flex items-center space-x-4">
         <ThemeToggle />
-        <Link
-          href="https://calendly.com/boyepanthera/30min"
+        <button
+          onClick={() =>
+            openInNewTab("https://calendly.com/boyepanthera/30min")
+          }
           className={`
-            px-4 py-2 rounded-md text-sm font-medium transition-colors
+            px-4 py-2 rounded-md justify-center text-sm font-medium transition-colors text-center 
             ${
               theme === "dark"
                 ? "bg-amber-600 text-white hover:bg-amber-700"
@@ -84,7 +91,7 @@ export default function Navbar() {
           `}
         >
           LET'S TALK
-        </Link>
+        </button>
       </div>
     </nav>
   );

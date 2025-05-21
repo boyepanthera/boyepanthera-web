@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import Image from "next/image";
+import { openInNewTab } from "./util";
 
 export default function AnimatedGradientHero() {
   const containerRef = useRef(null);
@@ -40,7 +41,14 @@ export default function AnimatedGradientHero() {
             I specialize in building scalable, high-performing web, mobile, and
             machine learning applications using cutting-edge tools.
           </p>
-          <button className="cta-button">Let's Talk</button>
+          <button
+            onClick={() =>
+              openInNewTab("https://calendly.com/boyepanthera/30min")
+            }
+            className="cta-button"
+          >
+            Let's Talk
+          </button>
         </div>
 
         <div className="image-container">
