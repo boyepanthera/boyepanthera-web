@@ -31,20 +31,20 @@ export default function SimpleContactSection() {
             <p className="flex items-baseline">
               <span className="text-amber-400 font-medium w-12">Email:</span>
               <a
-                href="mailto:boye@megastacktech.com"
+                href="mailto:boyepanthera@gmail.com"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
               >
-                boye@megastacktech.com
+                boyepanthera@gmail.com
               </a>
             </p>
 
             <p className="flex items-baseline">
               <span className="text-amber-400 font-medium w-12">Phone:</span>
               <a
-                href="tel:+1234567890"
+                href="tel:+3169280387"
                 className="text-gray-300 hover:text-amber-400 transition-colors"
               >
-                (316) 928-8901
+                (316) 928-0387
               </a>
             </p>
 
