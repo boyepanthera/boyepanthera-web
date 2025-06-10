@@ -6,6 +6,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
+const NewTabLink = ({ href, theme, children }) => (
+  <a
+    className={`
+                        inline-flex items-center text-sm font-medium
+                        ${
+                          theme === "dark"
+                            ? "text-amber-400 hover:text-amber-300"
+                            : "text-amber-600 hover:text-amber-800"
+                        }
+                      `}
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    {children}
+  </a>
+);
+
 export default function ScrollableProjects() {
   const { theme } = useTheme();
   const scrollContainerRef = useRef(null);
@@ -13,7 +31,6 @@ export default function ScrollableProjects() {
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(2);
 
-  // Sample project data - replace with your actual projects
   const projects = [
     {
       id: 1,
@@ -22,43 +39,49 @@ export default function ScrollableProjects() {
         "A platform allowing institutions to create and manage online classes, assignments, and the evaluation system. Built in the expert content format.",
       image: "/learning-system.jpg", // Replace with your actual image path
       technologies: ["TypeScript", "React", "MongoDB", "Node"],
-      link: "/view-project",
+      link: "https://pantheratechschool.com",
     },
     {
       id: 2,
       title: "Geo-Fencing & Face Recognition",
       description:
         "Location-based authorization system enabling user authentication through face verification and GPS tracking.",
-      image: "/geo-face.jpg", // Replace with your actual image path
-      technologies: ["Python", "TensorFlow", "AWS", "PostgreSQL"],
-      link: "/view-project",
+      image: "/geo-face.jpg",
+      technologies: [
+        "Python",
+        "TensorFlow",
+        "AWS",
+        "PostgreSQL",
+        "React Native",
+      ],
+      link: "https://apps.apple.com/us/app/abia-oneid-authenticator/id6475302978",
     },
     {
       id: 3,
       title: "Rentzen Platform",
       description:
         "Full-featured online store with inventory management, payment processing, and customer analytics dashboard.",
-      image: "/rentzen-mobileapp.jpg", // Replace with your actual image path
-      technologies: ["Vue.js", "Node.js", "MongoDB", "Stripe"],
-      link: "/view-project",
+      image: "/rentzen-mobileapp.jpg",
+      technologies: ["React Native", "Node.js", "MySQL", "Stripe"],
+      link: "https://apps.apple.com/us/app/rentzen/id6740734022",
     },
     {
       id: 4,
-      title: "AI Content Generator",
+      title: "Health and Wellness Market",
       description:
-        "ML-powered tool that generates custom marketing copy, blog posts, and product descriptions based on user inputs and preferences.",
-      image: "/predictive-model.jpg", // Replace with your actual image path
-      technologies: ["Python", "TensorFlow", "React", "FastAPI"],
-      link: "/view-project",
+        "Making prescription medications more affordable to Americans through membership based service. Supplies generic medications at actual wholesale cost through this membership service.",
+      image: "/predictive-model.jpg",
+      technologies: ["ReactJs", "Nodejs", "React", "Laravel"],
+      link: "https://www.vivmeds.com",
     },
     {
       id: 5,
       title: "Mentor-Student Booking System 'Edlyft'",
       description:
         "ML-powered tool that generates custom marketing copy, blog posts, and product descriptions based on user inputs and preferences.",
-      image: "/mentor-student.jpg", // Replace with your actual image path
-      technologies: ["Python", "TensorFlow", "React", "FastAPI"],
-      link: "/view-project",
+      image: "/mentor-student.jpg",
+      technologies: ["Reactjs", "Nodejs", "DynamoDB", "Airtable"],
+      link: "https://www.students.edlyft.com/",
     },
   ];
 
@@ -199,8 +222,9 @@ export default function ScrollableProjects() {
                     </div>
 
                     {/* View Project Link */}
-                    <Link
+                    <NewTabLink
                       href={project.link}
+                      theme={theme}
                       className={`
                         inline-flex items-center text-sm font-medium
                         ${
@@ -212,7 +236,7 @@ export default function ScrollableProjects() {
                     >
                       View Project
                       <ArrowRight size={16} className="ml-1" />
-                    </Link>
+                    </NewTabLink>
                   </div>
                 </div>
               ))}
