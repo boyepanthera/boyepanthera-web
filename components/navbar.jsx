@@ -1,13 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "./ThemeProvider";
+import Image from "next/image";
 import { openInNewTab } from "./util";
+import { usePathname } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   const { theme } = useTheme();
+  const pathname = usePathname();
+
+  // Function to determine if a link is active
+  const isActive = (path) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+
+    // For paths like /blog, check if the current path starts with it
+    return pathname.startsWith(path);
+  };
 
   return (
     <nav
@@ -15,7 +27,6 @@ export default function Navbar() {
         theme === "dark" ? "bg-[#1a0e0e]" : "bg-white"
       } w-full px-8 py-4 flex items-center justify-between`}
     >
-      {/* Logo */}
       <Link href="/" className="flex items-center">
         <div className="h-8 w-8 mr-2 relative">
           <Image
@@ -34,20 +45,31 @@ export default function Navbar() {
         </span>
       </Link>
 
-      {/* Navigation Links */}
       <div className="hidden md:flex items-center space-x-8">
         <Link
           href="/"
           className={`hover:opacity-80 transition ${
-            theme === "dark" ? "text-amber-400" : "text-amber-800"
+            isActive("/")
+              ? theme === "dark"
+                ? "text-amber-400"
+                : "text-amber-800"
+              : theme === "dark"
+              ? "text-white/80"
+              : "text-gray-700"
           }`}
         >
           Home
         </Link>
         <Link
-          href="/about"
+          href="/#about"
           className={`hover:opacity-80 transition ${
-            theme === "dark" ? "text-white/80" : "text-gray-700"
+            isActive("/about")
+              ? theme === "dark"
+                ? "text-amber-400"
+                : "text-amber-800"
+              : theme === "dark"
+              ? "text-white/80"
+              : "text-gray-700"
           }`}
         >
           About Me
@@ -55,22 +77,47 @@ export default function Navbar() {
         <Link
           href="/#projects"
           className={`hover:opacity-80 transition ${
-            theme === "dark" ? "text-white/80" : "text-gray-700"
+            pathname === "/"
+              ? theme === "dark"
+                ? "text-white/80"
+                : "text-gray-700"
+              : theme === "dark"
+              ? "text-white/80"
+              : "text-gray-700"
           }`}
         >
           Projects
         </Link>
         <Link
+          href="/blog"
+          className={`hover:opacity-80 transition ${
+            isActive("/blog")
+              ? theme === "dark"
+                ? "text-amber-400"
+                : "text-amber-800"
+              : theme === "dark"
+              ? "text-white/80"
+              : "text-gray-700"
+          }`}
+        >
+          Blog
+        </Link>
+        <Link
           href="/#contact"
           className={`cursor-pointer hover:opacity-80 transition ${
-            theme === "dark" ? "text-white/80" : "text-gray-700"
+            pathname === "/"
+              ? theme === "dark"
+                ? "text-white/80"
+                : "text-gray-700"
+              : theme === "dark"
+              ? "text-white/80"
+              : "text-gray-700"
           }`}
         >
           Contact
         </Link>
       </div>
 
-      {/* Right side items: Theme toggle and CTA button */}
       <div className="flex items-center space-x-4">
         <ThemeToggle />
         <button

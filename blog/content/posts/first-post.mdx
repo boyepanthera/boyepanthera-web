@@ -1,0 +1,54 @@
+---
+title: "Building a Modern Portfolio with Next.js"
+date: "2024-06-14"
+excerpt: "Learn how to create a stunning portfolio site with Next.js, React, and Tailwind CSS"
+image: "/blog/nextjs-portfolio.png"
+categories: ["Next.js", "React", "Web Development"]
+---
+
+# Building a Modern Portfolio with Next.js
+
+A great portfolio website is essential for any software developer. In this guide, I'll walk through how I built this site using Next.js, React, and Tailwind CSS.
+
+## Why Next.js?
+
+Next.js offers several advantages for portfolio sites:
+
+- **Performance**: Automatic code splitting and server-side rendering
+- **SEO**: Better search engine visibility with SSR
+- **Developer Experience**: Great developer tools and fast refresh
+- **Deployment**: Easy deployment with Vercel
+
+## Setting Up the Project
+
+First, I created a new Next.js project:
+
+```bash
+npx create-next-app my-portfolio
+cd my-portfolio
+```
+
+## Adding Dark Mode
+
+One of the key features of my portfolio is the theme switching capability:
+
+```jsx
+"use client";
+
+import { createContext, useContext, useState, useEffect } from "react";
+
+const ThemeContext = createContext({
+  theme: "light",
+  toggleTheme: () => {},
+});
+
+export function ThemeProvider({ children }) {
+  // Implementation details...
+}
+
+export const useTheme = () => useContext(ThemeContext);
+```
+
+## Conclusion
+
+Building a portfolio with Next.js provides an excellent opportunity to showcase both your work and your technical skills. The resulting site is fast, SEO-friendly, and visually impressive.
