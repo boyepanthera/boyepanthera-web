@@ -1,0 +1,172 @@
+---
+title: "How To Upload Multiple Files to Cloudinary in Node.js using Promise.all"
+description: "Learn how to efficiently upload multiple images to Cloudinary using Promise.all instead of buggy loops. Complete tutorial with code examples and best practices."
+author: "Olanrewaju Olaboye"
+date: "2019-12-15" # Adjust this date to when you originally published
+updatedAt: "2025-01-18"
+image: "/blog/cloudinary-upload.svg"
+tags: ["nodejs", "cloudinary", "javascript", "file-upload", "promises"]
+categories:
+  ["cloudinary", "tutorial", "nodejs", "javascript", "file-upload", "promises"]
+featured: false
+slug: "upload-multiple-files-cloudinary-nodejs-promise-all"
+---
+
+# How To Upload Multiple Files to Cloudinary in Node.js using Promise.all
+
+It has remained something confusing while perusing [Cloudinary](https://cloudinary.com/) documentation on how exactly do you upload multiple images. For most developers, what they tend to do is call the single file upload method on the SDK in a loop. While this seems to work at times, it gets buggy when one of the files has to take more time than the other because of the size.
+
+To follow along with this tutorial, you can download the starter boilerplate Node.js with Express code from [GitHub](https://github.com/boyepanthera/multi-file-uploader).
+
+We need to add multer configuration to our `server.js` file, then use this to create an upload middleware function.
+
+## First Acts
+
+Clone the repository and install dependencies:
+
+```bash
+# Clone the repo
+git clone https://github.com/boyepanthera/multi-file-uploader/blob/master/package.json
+
+# Navigate into the project
+cd multi-file-uploader
+
+# Install all dependencies
+yarn install
+
+# Install nodemon for server restart on save
+yarn add -D nodemon
+
+# Install new dependencies
+yarn add dotenv
+```
+
+## Second Acts
+
+Add the following scripts object to your package.json :
+
+```json
+{
+  "scripts": {
+    "start": "node -r esm server.js",
+    "dev": "nodemon -r esm server.js"
+  }
+}
+```
+
+What this does is allow us to make our server restart on save and run our JS file with ESM module so we can use import syntax.
+
+## Third Acts: Configure server.js
+
+Update the top part of your server.js file:
+
+```javascript
+import express from "express";
+import cloudinary from "cloudinary";
+import multer from "multer";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const app = express();
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+const {
+  NODE_ENV,
+  PORT: productionPort,
+  IP: productionIP,
+  cloudinaryName,
+  cloudinaryApiKey,
+  cloudinaryApiSecret,
+} = process.env;
+
+const storage = multer.diskStorage({
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + Date.now());
+  },
+});
+
+cloudinary.v2.config({
+  cloud_name: cloudinaryName,
+  api_key: cloudinaryApiKey,
+  api_secret: cloudinaryApiSecret,
+});
+
+const upload = multer({ storage });
+
+app.get("/", (req, res) => {
+  return res.status(200).json({
+    message: "Multiple uploader api",
+  });
+});
+
+// ... rest of your server configuration
+
+if (NODE_ENV === "production") {
+  // production configuration
+}
+```
+
+## Acts Four: The Magic Happens Here
+
+Next, we use the upload middleware function created from multer. This middleware's array method `upload.array(nameOfFilesFields, maxCount)` takes the name we want to call the file field and the maximum number of images it should allow for upload.
+
+```javascript
+app.post("/images", upload.array("pictures", 10), async (req, res) => {
+  try {
+    let pictureFiles = req.files;
+
+    // Check if files exist
+    if (!pictureFiles)
+      return res.status(400).json({ message: "No picture attached!" });
+
+    // Map through images and create a promise array using cloudinary upload function
+    let multiplePicturePromise = pictureFiles.map((picture) =>
+      cloudinary.v2.uploader.upload(picture.path)
+    );
+
+    // Await all the cloudinary upload functions in promise.all, exactly where the magic happens
+    let imageResponses = await Promise.all(multiplePicturePromise);
+
+    res.status(200).json({ images: imageResponses });
+  } catch (err) {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+});
+```
+
+## Testing the Implementation
+
+You can run `yarn dev` - your app should be running on `localhost:9000`
+
+You can make a request to `http://localhost:9000/images` with the form-data request body type using `pictures` as the field name.
+
+## Key Benefits of This Approach
+
+1. **Concurrent Uploads**: All files upload simultaneously instead of sequentially
+2. **Better Performance**: Significantly faster than loop-based uploads
+3. **Error Handling**: Proper error handling for failed uploads
+4. **Scalability**: Can handle multiple files efficiently
+
+## Resources
+
+- [Sample Response JSON](https://multi-file-uploader.herokuapp.com/sampleresponse.json)
+- [Completed Code on GitHub](https://github.com/wonderfulolanrewaju/multi-file-uploader/tree/completed)
+- [Live Demo on Heroku](https://multi-file-uploader.herokuapp.com/)
+
+## Alternative Approaches
+
+As mentioned in the comments, for production applications with high traffic, consider:
+
+1. **Client-side uploads** using signed URLs
+2. **Event-based responses** using WebSockets
+3. **Frontend SDKs** for React/Vue applications
+
+These approaches can help prevent server memory issues and improve user experience.
+
+---
+
+_This tutorial demonstrates a practical solution to a common problem in Node.js applications. The Promise.all approach ensures all uploads happen concurrently, making your application more efficient and reliable._

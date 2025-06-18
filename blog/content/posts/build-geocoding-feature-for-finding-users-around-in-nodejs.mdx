@@ -1,0 +1,526 @@
+---
+title: "Build a Geocoding Feature for Finding Users Around in Node.js API"
+description: "Learn how to build location-based user discovery features like social media apps. Complete tutorial covering MongoDB 2dsphere indexing, IP-based geolocation, and proximity queries."
+author: "Olanrewaju Olaboye"
+image: "/blog/geocoding-users.webp"
+
+date: "2020-11-20" # Adjust this date to when you originally published
+updatedAt: "2025-01-18"
+categories:
+  [
+    "geocoding",
+    "nodejs",
+    "mongodb",
+    "geolocation",
+    "express",
+    "social-features",
+  ]
+category: "tutorial"
+featured: true
+slug: "build-geocoding-feature-finding-users-nodejs-api"
+---
+
+# Build a Geocoding Feature for Finding Users Around in Node.js API
+
+In recent times, it has seemed like magic that social media applications can show you users they believe live around you and you might probably want to connect with. As a developer, at one point in time you will need to track the location of users and recommend people they may know to establish friend connections/networks.
+
+In this tutorial, I'm going to show exactly how to track the last login location of a user, save/update this in our database, and use this reservoir of data to recommend users around for each user on the platform.
+
+## Prerequisites
+
+- Basic knowledge of Node.js, Express framework, and Mongoose ORM
+- Knowledge of token-based authentication using JWT in Node.js
+- Understanding of geographic coordinate systems
+
+## What We'll Build
+
+By the end of this tutorial, you'll have:
+
+- IP-based location tracking system
+- MongoDB with geospatial indexing
+- User proximity detection API
+- Location-based user recommendations
+
+## Guide Overview
+
+1. Clone and test the boilerplate code
+2. Write MongoDB/Mongoose schema with 2dsphere index
+3. Install, configure, and use express-ip to grab location users made HTTP request from
+4. Query user model for other users around a particular user
+
+## Step 1: Clone and Test the Boilerplate Code
+
+Let's start by setting up our project foundation:
+
+```bash
+# Clone the repository
+git clone https://github.com/WonderfulOlanrewaju/nearby-api-boilerplate.git
+
+# Navigate to project directory
+cd nearby-api-boilerplate
+
+# Install dependencies
+yarn install && yarn add cross-env
+```
+
+The commands above:
+
+1. Clone the remote repo into your current working directory
+2. Change directory into the copied folder
+3. Install all dependencies needed to run the boilerplate code with signup and login with JWT already implemented
+
+### Environment Configuration
+
+Create a `.env` file in the root of your project and add the environment variable:
+
+```env
+secretKey=yoursecretkeyvalue
+```
+
+### Test the Boilerplate
+
+Make sample requests to ensure everything works:
+
+**Register Request:**
+
+```javascript
+POST /signup
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+**Login Request:**
+
+```javascript
+POST /login
+{
+  "email": "john@example.com",
+  "password": "securepassword"
+}
+```
+
+## Step 2: MongoDB Schema with 2dsphere Index
+
+First, let's create a utility function to update user locations:
+
+### Create Location Update Utility
+
+Create `src/controllers/utils/updateLocation.js`:
+
+```javascript
+import { User } from "../../models/User.model";
+
+export const UpdateLastLocation = async (ipInfo, userId) => {
+  let lastLocation = {
+    type: "Point",
+    coordinates: ipInfo.ll,
+  };
+
+  let savedUser = await User.findByIdAndUpdate(
+    userId,
+    {
+      ipInfo,
+      lastLocation,
+    },
+    { new: true }
+  );
+
+  return savedUser;
+};
+```
+
+This utility function extracts longitude and latitude from IP information and saves it to the user object in the database.
+
+### Update User Model
+
+Create `src/models/User.model.js`:
+
+```javascript
+import Mongoose from "mongoose";
+import autoIncrement from "mongoose-auto-increment";
+
+let { connection, Schema } = Mongoose;
+autoIncrement.initialize(connection);
+
+// GeoJSON Point Schema
+const pointSchema = new Schema({
+  type: {
+    type: String,
+    enum: ["Point"],
+    required: true,
+  },
+  coordinates: {
+    type: [Number],
+    required: true,
+  },
+});
+
+const UserSchema = new Schema({
+  firstName: {
+    type: String,
+    min: 2,
+    default: "",
+  },
+  lastName: {
+    type: String,
+    default: "",
+  },
+  email: {
+    type: String,
+    unique: true,
+  },
+  address: {
+    type: String,
+    default: "",
+  },
+  password: {
+    type: String,
+    default: "",
+  },
+
+  // IP Information from express-ip
+  ipInfo: {
+    ip: { type: String, default: "" },
+    range: { type: Array, default: [] },
+    country: { type: String, default: "" },
+    region: { type: String, default: "" },
+    eu: { type: String, default: "" },
+    city: { type: String, default: "" },
+    ll: { type: Array }, // [longitude, latitude]
+    metro: Number,
+    area: Number,
+  },
+
+  // GeoJSON Point for MongoDB geospatial queries
+  lastLocation: {
+    type: pointSchema,
+    default: {
+      type: "Point",
+      coordinates: [0, 0],
+    },
+    index: "2dsphere", // This enables geospatial queries
+  },
+});
+
+UserSchema.plugin(autoIncrement.plugin, {
+  startAt: 1,
+  incrementBy: 1,
+  model: "User",
+});
+
+export const User = Mongoose.model("User", UserSchema);
+```
+
+**Key Points:**
+
+- `pointSchema` follows GeoJSON Point format
+- `2dsphere` index enables efficient geospatial queries
+- `ipInfo` stores detailed location data from IP lookup
+- `lastLocation` stores coordinates in MongoDB-compatible format
+
+## Step 3: Install and Configure express-ip
+
+The `express-ip` package discovers longitude, latitude, city, timezone, and country based on the user's IP address.
+
+```bash
+yarn add express-ip
+```
+
+### Configure express-ip Middleware
+
+Update `src/app.js`:
+
+```javascript
+// Add to the upper part before app.get("/")
+import { User } from "./models/User.model";
+import expressIP from "express-ip";
+
+// Enable IP information middleware globally
+app.use(expressIP().getIpInfoMiddleware);
+
+// Add this route before the last line of code
+app.get("/nearbyusers", async (req, res) => {
+  try {
+    const { ipInfo } = req;
+
+    // Find users within 10km radius using MongoDB's $nearSphere
+    let nearByUsers = await User.find({
+      lastLocation: {
+        $nearSphere: {
+          $geometry: {
+            type: "Point",
+            coordinates: ipInfo.ll,
+          },
+          $maxDistance: 10000, // 10km in meters
+        },
+      },
+    });
+
+    if (!nearByUsers || nearByUsers.length === 0) {
+      res.status(200).json({
+        message: "No users near you",
+        nearByUsers: [],
+      });
+    } else {
+      res.status(200).json({
+        message: "Here are users near you",
+        nearByUsers,
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      message: `Issues finding nearby users. ${err.message}`,
+    });
+  }
+});
+```
+
+**How This Works:**
+
+- `express-ip` middleware adds `ipInfo` to every request
+- `$nearSphere` performs geospatial queries on sphere (Earth)
+- `$maxDistance` sets radius in meters (10,000m = 10km)
+
+## Step 4: Update Authentication Controllers
+
+### Add User Fetch Route
+
+Update `src/controllers/major/auth.controller.js`:
+
+```javascript
+import { createUser, loginUser } from "../utils/User.util";
+import { handleResError, handleResSuccess } from "../utils/response.util";
+import { UpdateLastLocation } from "../utils/updateLocation";
+import JWT from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
+const { secretKey } = process.env;
+
+export const SignupController = async (req, res) => {
+  try {
+    let userDetails = req.body;
+    let { err, user } = await createUser(userDetails);
+
+    if (err) {
+      handleResError(res, err, 400);
+    } else {
+      let { _id, email, isActive } = user;
+
+      // Update location on signup
+      const { ipInfo } = req;
+      await UpdateLastLocation(ipInfo, _id);
+
+      let options = {
+        expiresIn: "12h",
+        issuer: "nearby-hasher",
+      };
+      let token = await JWT.sign({ _id, email, isActive }, secretKey, options);
+      handleResSuccess(res, `Account created!`, token, 201);
+    }
+  } catch (err) {
+    handleResError(res, err, 400);
+  }
+};
+
+export const LoginController = async (req, res) => {
+  try {
+    const { ipInfo } = req;
+    let { err, token } = await loginUser(req.body);
+
+    if (!err) {
+      // Update location on login
+      let user = await User.findOne({ email: req.body.email });
+      await UpdateLastLocation(ipInfo, user._id);
+    }
+
+    if (err) handleResError(res, err, 400);
+    else handleResSuccess(res, "login successful", token, 201);
+  } catch (err) {
+    handleResError(res, err, 400);
+  }
+};
+
+export const FetchAUserController = async (req, res) => {
+  try {
+    const { ipInfo } = req;
+    let id = req.decoded._id;
+
+    // Update location when user accesses profile
+    let updatedUser = await UpdateLastLocation(ipInfo, id);
+    handleResSuccess(res, "user fetched", updatedUser, 201);
+  } catch (err) {
+    handleResError(res, err, 400);
+  }
+};
+```
+
+**Location Tracking Strategy:**
+
+- Update location on signup (first-time users)
+- Update location on login (returning users)
+- Update location on profile access (active users)
+
+## Step 5: Deployment and Testing
+
+### Add Start Script
+
+Update `package.json`:
+
+```json
+{
+  "scripts": {
+    "start": "node -r esm ./src/server.js"
+  }
+}
+```
+
+### Deploy to Heroku
+
+```bash
+# Ensure Heroku CLI is logged in and MongoDB connection string is configured
+heroku create your-app-name
+
+git add .
+git commit -m "Add geocoding feature"
+
+# Push to Heroku (try both commands as GitHub changed default branch)
+git push heroku master
+# OR
+git push heroku main
+```
+
+### Testing the Feature
+
+1. **Create test users** on the live API with different emails
+2. **Call the fetch user route** to save their locations
+3. **Visit the nearby users endpoint** to see proximity results
+
+Example test:
+
+```bash
+# After creating users and updating their locations
+GET https://your-app.herokuapp.com/nearbyusers
+```
+
+## Understanding the Geospatial Queries
+
+### MongoDB 2dsphere Index
+
+The `2dsphere` index supports:
+
+- **$nearSphere**: Find documents near a point on a sphere
+- **$geoWithin**: Find documents within a specified shape
+- **$geoIntersects**: Find documents that intersect with a geometry
+
+### Distance Calculations
+
+```javascript
+// Different distance examples
+$maxDistance: 1000; // 1km
+$maxDistance: 5000; // 5km
+$maxDistance: 10000; // 10km
+$maxDistance: 50000; // 50km
+```
+
+### Advanced Proximity Queries
+
+You can enhance the basic query with additional filters:
+
+```javascript
+// Find nearby users with additional criteria
+let nearByUsers = await User.find({
+  _id: { $ne: currentUserId }, // Exclude current user
+  lastLocation: {
+    $nearSphere: {
+      $geometry: {
+        type: "Point",
+        coordinates: ipInfo.ll,
+      },
+      $maxDistance: 10000,
+    },
+  },
+  isActive: true, // Only active users
+}).limit(20); // Limit results
+```
+
+## Security Considerations
+
+### IP-Based Location Limitations
+
+- **VPN users** may show incorrect locations
+- **Corporate networks** might show office location instead of home
+- **Mobile users** on cellular networks may have approximate locations
+
+### Privacy Best Practices
+
+1. **User consent**: Always ask permission before tracking location
+2. **Data retention**: Consider how long to store location data
+3. **Anonymization**: Remove identifying information from location logs
+4. **Opt-out**: Provide users ability to disable location features
+
+## Performance Optimization
+
+### Database Indexing
+
+Ensure proper indexing for geospatial queries:
+
+```javascript
+// Create compound indexes for better performance
+UserSchema.index({ lastLocation: "2dsphere", isActive: 1 });
+UserSchema.index({ lastLocation: "2dsphere", createdAt: -1 });
+```
+
+### Query Optimization
+
+```javascript
+// Use projection to reduce data transfer
+let nearByUsers = await User.find(
+  {
+    lastLocation: {
+      $nearSphere: {
+        /* ... */
+      },
+    },
+  },
+  {
+    firstName: 1,
+    lastName: 1,
+    email: 1,
+    lastLocation: 1,
+    _id: 1,
+  }
+).limit(50);
+```
+
+## Extending the Feature
+
+### Possible Enhancements
+
+1. **Real-time location updates** using WebSockets
+2. **Location history tracking** for user analytics
+3. **Geofencing alerts** when users enter specific areas
+4. **Location-based content delivery**
+5. **Privacy zones** where users can hide their location
+
+### Integration Ideas
+
+- **Friend suggestions** based on proximity
+- **Local event recommendations**
+- **Nearby business discovery**
+- **Emergency contact alerts**
+
+## Resources
+
+- [MongoDB Geospatial Queries Documentation](https://docs.mongodb.com/manual/geospatial-queries/)
+- [Final Repository](https://github.com/WonderfulOlanrewaju/nearby-api)
+- [Postman Documentation](https://documenter.getpostman.com/view/13086801/TVRrWQdv)
+- [Live API Demo](https://nearby-user-api.herokuapp.com/nearbyusers)
+
+---
+
+_This tutorial demonstrates how to build location-aware features that power modern social applications. The combination of IP-based geolocation and MongoDB's geospatial capabilities creates a powerful foundation for proximity-based user experiences._
