@@ -54,7 +54,7 @@ Let's start by setting up our project foundation:
 
 ```bash
 # Clone the repository
-git clone https://github.com/WonderfulOlanrewaju/nearby-api-boilerplate.git
+git clone https://github.com/boyepanthera/nearby-api-boilerplate.git
 
 # Navigate to project directory
 cd nearby-api-boilerplate
@@ -71,7 +71,7 @@ The commands above:
 
 ### Environment Configuration
 
-Create a `.env` file in the root of your project and add the environment variable:
+Create a .env file in the root of your project and add the environment variable:
 
 ```env
 secretKey=yoursecretkeyvalue
@@ -109,7 +109,7 @@ First, let's create a utility function to update user locations:
 
 ### Create Location Update Utility
 
-Create `src/controllers/utils/updateLocation.js`:
+Create src/controllers/utils/updateLocation.js:
 
 ```javascript
 import { User } from "../../models/User.model";
@@ -137,7 +137,7 @@ This utility function extracts longitude and latitude from IP information and sa
 
 ### Update User Model
 
-Create `src/models/User.model.js`:
+Create src/models/User.model.js:
 
 ```javascript
 import Mongoose from "mongoose";
@@ -217,22 +217,22 @@ export const User = Mongoose.model("User", UserSchema);
 
 **Key Points:**
 
-- `pointSchema` follows GeoJSON Point format
-- `2dsphere` index enables efficient geospatial queries
-- `ipInfo` stores detailed location data from IP lookup
-- `lastLocation` stores coordinates in MongoDB-compatible format
+- pointSchema follows GeoJSON Point format
+- 2dsphere index enables efficient geospatial queries
+- ipInfo stores detailed location data from IP lookup
+- lastLocation stores coordinates in MongoDB-compatible format
 
 ## Step 3: Install and Configure express-ip
 
-The `express-ip` package discovers longitude, latitude, city, timezone, and country based on the user's IP address.
+The express-ip package discovers longitude, latitude, city, timezone, and country based on the user's IP address.
 
 ```bash
-yarn add express-ip
+$ yarn add express-ip
 ```
 
 ### Configure express-ip Middleware
 
-Update `src/app.js`:
+Update src/app.js:
 
 ```javascript
 // Add to the upper part before app.get("/")
@@ -281,15 +281,15 @@ app.get("/nearbyusers", async (req, res) => {
 
 **How This Works:**
 
-- `express-ip` middleware adds `ipInfo` to every request
-- `$nearSphere` performs geospatial queries on sphere (Earth)
-- `$maxDistance` sets radius in meters (10,000m = 10km)
+- express-ip middleware adds ipInfo to every request
+- $nearSphere performs geospatial queries on sphere (Earth)
+- $maxDistance sets radius in meters (10,000m = 10km)
 
 ## Step 4: Update Authentication Controllers
 
 ### Add User Fetch Route
 
-Update `src/controllers/major/auth.controller.js`:
+Update src/controllers/major/auth.controller.js:
 
 ```javascript
 import { createUser, loginUser } from "../utils/User.util";
@@ -369,7 +369,7 @@ export const FetchAUserController = async (req, res) => {
 
 ### Add Start Script
 
-Update `package.json`:
+Update package.json:
 
 ```json
 {
