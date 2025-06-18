@@ -7,10 +7,12 @@ import Toolbox from "@/components/Toolbox";
 import WorkExperience from "@/components/WorkExperience";
 import Testimonials from "@/components/Testimonials";
 import SimpleContactSection from "@/components/SimpleContactSection";
+import PersonSchema from "@/components/StructuredData";
 
 export default function Home() {
   return (
     <main>
+      <PersonSchema />
       <HeroSection />
       <SelectedProjects />
       <AboutMe />
