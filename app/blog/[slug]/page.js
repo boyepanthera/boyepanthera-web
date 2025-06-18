@@ -1,11 +1,11 @@
-import { getPostBySlug, getPostSlugs } from "@/lib/mdx";
+import { getPostBySlug, getPostSlugs, getAuthorBySlug } from "@/lib/mdx";
 import BlogLayout from "../../../blog/components/BlogLayout";
 import ClientMDXContent from "@/components/ClientMDXContent";
+import AuthorCard from "@/blog/components/AuthorCard";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
 export async function generateMetadata({ params }) {
-  // Fix: Using await for params
   const slug = params?.slug;
   const post = getPostBySlug(slug);
 
@@ -30,7 +30,6 @@ export async function generateStaticParams() {
 }
 
 export default function BlogPostPage({ params }) {
-  // Fix: Using awaited params
   const slug = params?.slug;
   const post = getPostBySlug(slug);
 
@@ -39,6 +38,10 @@ export default function BlogPostPage({ params }) {
   }
 
   const { frontmatter, content } = post;
+
+  // Get author data - default to "boyepanthera" if not specified
+  const authorSlug = frontmatter.author || "boyepanthera";
+  const author = getAuthorBySlug(authorSlug);
 
   return (
     <BlogLayout>
@@ -53,14 +56,6 @@ export default function BlogPostPage({ params }) {
             />
           </div>
         )}
-
-        {/* <h1
-          className={`text-3xl font-bold mb-2 ${
-            frontmatter.image ? "" : "mt-6"
-          }`}
-        >
-          {frontmatter.title}
-        </h1> */}
 
         <div className="flex flex-wrap items-center mb-8 gap-4">
           <time className="text-sm text-gray-500 dark:text-gray-400">
@@ -92,6 +87,16 @@ export default function BlogPostPage({ params }) {
         <div className="mdx-content">
           <ClientMDXContent source={content} />
         </div>
+
+        {/* Add author card */}
+        {author && (
+          <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-800">
+            <h2 className="text-xl font-bold mb-4">About the Author</h2>
+            <AuthorCard author={author} />
+          </div>
+        )}
+
+        {/* Add share buttons and related posts here if desired */}
       </article>
     </BlogLayout>
   );
